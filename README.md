@@ -1,59 +1,59 @@
 # sd_extension_template
 
-- Extension開発で変に詰まったところをテンプレ化していく
-- 公式ドキュメント
+- Create templates for strangely stuck places in extension development
+- Official documentation
   - https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Developing-extensions
 
-# 対応バージョン
+# supported version
 
 ## Python
 
-### Python 3.8以降に対応する
+### Compatible with Python 3.8+
 
-- 3.10をすんなり導入できるのはWindowsくらい
-- ColabやROCmなどの一部環境で3.8ユーザーが残っている
-- condaユーザーは3.9までしか上げられない
-- pipとxformersの両立が難しいっぽい
-- 3.8のEoLは2024年10月らしい...
+- Only Windows can install 3.10 easily
+- Some environments such as Colab and ROCm still have 3.8 users
+- conda users can only go up to 3.9
+- It seems difficult to coexist with pip and xformers
+- EoL of 3.8 seems to be October 2024...
 
-3.8と3.9と3.10の違い
+Difference between 3.8 and 3.9 and 3.10
 
-- 3.8の__file__は相対パス os.path.abspath(__file__) で絶対パスに出来る
-- 3.9以前はmatch構文が使えないのでifで代用する
+- __file__ in 3.8 can be absolute path with relative path os.path.abspath(__file__)
+- Since match syntax cannot be used before 3.9, use if instead
 
 ## Git
 
-- 勝手に lfs をインストールしたいが、やりすぎな感もある。
+- I want to install lfs on my own, but it feels like overkill.
 
 ## CUDA
 
-- 11.6でも大丈夫そう
+- 11.6 seems fine
 
-## requirements.txt記載のモジュール
+## Modules listed in requirements.txt
 
-- 本体バージョンに従うのが無難
-- 本体が勝手にバージョンアップするが従わざるを得ない
+- It is safe to follow the main version
+- The main unit upgrades on its own, but I have no choice but to obey
 
-# ファイル名と場所
+# file name and location
 
-## リポジトリ名
+## repository name
 
-- ハイフンは使わずアンダーバーを使ったほうが無難。
-- ハイフンを使ったディレクトリのインポートは importlib が必要になる。
+- It is safer to use underscores instead of hyphens.
+- Importing directories with hyphens requires importlib.
 
-## Extensionの入ったフォルダ名の変更
+## Rename folder containing extension
 
-- 1111本体の機能として指定可能だが対応が結構難しい。
-  - たとえば sd_dreambooth_extension は動作しない。
-- 作者としては可能な限りで対応する。
-- ユーザーとしては名前を変更しないで使うほうが無難。
+- Although it can be specified as a function of the 1111 main unit, it is quite difficult to handle.
+  - For example sd_drebooth_extension does not work.
+- As an author, I will do my best to respond.
+- As a user, it is safer to use without changing the name.
 
 ## install.py
 
-- インストール時と起動時に毎回呼ばれる。
-- なので重たい処理は厳禁。
+- Called at install time and every boot.
+- So heavy processing is strictly prohibited.
 
-基本は launch.pyを使って pip install を行う程度。
+The basic is to use launch.py and perform pip install.
 
 ```python
 import launch
@@ -62,7 +62,7 @@ if not launch.is_installed("yaml"):
     launch.run_pip("install yaml", desc='yaml')
 ```
 
-込み入った処理は、成功時にフラグとなるファイルを置くと良い。
+For complex processing, it is good to put a file that will be a flag when successful.
 
 ```python
 import pathlib
@@ -73,61 +73,61 @@ if not os.path.exists(checked_path):
     pathlib.Path(checked_path).write_text('1')
 ```
 
-- install.pyの中ではscripts.basedir()は使えない
+- cannot use scripts.basedir() in install.py
 
 ## preload.py
 
-- sd_dreambooth_extensionの作者が要望してつけた機能。
-- 基本的には使わないほうが良い。
-  - コマンドラインオプションを追加してからExtensionを外すと1111本体が起動しなくなる。
-  - 自分自身の場所を知る方法が無い。
+- A feature requested by the author of sd_drebooth_extension.
+- Basically, it is better not to use it.
+  - 1111 main unit does not start when extension is removed after adding command line option.
+  - There is no way to know your own location.
 
-## scripts/ 内にpyファイルを置く
+## put py files in scripts/
 
-- ファイル名は何でもよい。
-- 種類としては以下のように分かれる(他にもあるかも)。
+- File name can be anything.
+- The types are divided as follows (there may be others).
   - API: script_callbacks.on_app_started(APIfunc)
-    - --apiオプションをつけて起動するもの
+    - Start with --api option
   - Tab: script_callbacks.on_ui_tabs(on_ui_tabs)
-    - 画面にタブとして表示されるUI
+    - UI displayed as tabs on the screen
   - Script: class Script(scripts.Script)
-    - txt2img/img2imgのScriptドロップダウンで選択するUI
-  - その他: 上記3つの指定が無いもの
-- おそらく gradio の起動時に全ファイルが一度読み込まれる。
+    - UI to select in Script dropdown for txt2img/img2img
+  - Others: Items without the above three specifications
+- Presumably all files are read once when gradio starts.
 
-- タブが最も使われている
-  - タブだらけになって邪魔なので、せめてタブ名は短くしましょう
+- Most used tabs
+  - At least keep the tab names short, as it's full of tabs and gets in the way
 
-### scripts/ 内のimport
+### imports in scripts/
 
 ```python
 from scripts import foo, bar, baz
 ```
 
-### 単体のスクリプトファイルをExtension化する方法
+### How to extend a single script file
 
-- scripts/foo.py ごとgitリポジトリに入れるだけ
-- あとは1111本体がやってくれる
+- Just put scripts/foo.py into git repository
+- 1111 will do the rest
 
-## scripts/ 外にpyファイルを置く
+## put py files outside scripts/
 
-- たとえば py/ ディレクトリを作りたいとする。
-- scriptsからpyディレクトリを見るには from py で済む
+- For example you want to create a py/ directory.
+- from py to see the py directory from scripts
 
 ```python
 from py import foo, bar, baz
 ```
 
-### pyディレクトリ内で同一ディレクトリの別ファイルをimportする
+### Import another file in the same directory in the py directory
 
 ```python
 from . import foo, bar, baz
 from .foo import foofanc
 ```
 
-### pyディレクトリから別ディレクトリのpyファイルをimportする
+### import py file in another directory from py directory
 
-- しないほうが楽
+- Easier not to
 
 ```python
 def example_func():
@@ -137,17 +137,17 @@ def example_func():
     example3 = importlib.import_module(f"{p[0]}.{p[1]}.py2.example3")
 ```
 
-### コマンドライン用に書かれたPythonをExtension化する
+### Extending Python written for the command line
 
-- ファイルを持ってきて設置する
-- 可能ならリポジトリ名のハイフンをアンダーバーに直す
-- 全部のimport文を相対パス指定に書き換える
-- __main__の内容を自作のUIからimportかimportlibで呼び出す
-- sys.argvやそのparser部分をUIかファイルで入力できるようにする
+- Bring and place files
+- Replace hyphens in repository names with underscores if possible
+- Rewrite all import statements to specify relative paths
+- Call the contents of __main__ from your own UI with import or importlib
+- Make it possible to input sys.argv and its parser part by UI or file
 
-## ファイルを置かせる、ファイルを出力する
+## place a file, output a file
 
-- Extensionの中に入れたほうが綺麗ではある。
+- It's better to put it in Extension.
 
 ```python
 def get_input_dir():
@@ -157,10 +157,10 @@ def get_input_dir():
     return input_dir
 ```
 
-### 設定ファイルやログファイルを置く
+### Place config and log files
 
-- ファイルはgitに入れない(pull時に上書きして初期化してしまうので)
-- ディレクトリを作ったほうがベター
+- Do not put the file in git (because it will be overwritten and initialized when pulling)
+- Better to make a directory
 
 ```python
 def get_config_path():
@@ -170,107 +170,107 @@ def get_config_path():
     return config_path
 ```
 
-# 開発環境
+# Development environment
 
-## VSCodeによるデバッグ
+## Debugging with VSCode
 
-- 私は出来ない
-- 恐らく1111ごと読み込んだプロジェクトとして編集する必要がありそう
-- 開発ツールを入れるとvenvが汚れるので注意する
+- I can't
+- Probably it seems necessary to edit as a project loaded with 1111
+- Note that venv will be dirty if you install development tools
 
-## Restart UIは使えない
+## Restart UI is not available
 
-- ファイルを更新しても反映されない
-- 同じコードを2度実行するとエラーになるような処理は書いてはいけない
-  - 疑似Constクラスとかは作らないほうが良い
-- --debug-uiでモデルの読み込みを飛ばせるけどモデルが必要なExtensionでは使えない
-- 起動時間はnull.safetensorsでも5秒くらいしか短縮されない
-- せめて速いSSDで1111を再起動しましょう
-  - RamDiskに入れても劇的な変化は無かったので出来る範囲で
+- Even if you update the file, it is not reflected
+- Do not write processing that causes an error if the same code is executed twice
+  - It is better not to create pseudo-Const classes
+- You can skip loading the model with --debug-ui, but you can't use it with an extension that requires a model
+- Startup time is only reduced by about 5 seconds even with null.safetensors
+- Reboot 1111 with at least a fast SSD
+  - There was no dramatic change even if I put it in RamDisk, so as far as I can
 
-## 依存ライブラリの確認
+## check dependent libraries
 
-- VC++ビルドツールやCUDAに依存してると影響がでかいので注意する
-- 開発用とは別に動作確認用のVMがあると理想的
+- Note that depending on VC++ build tools and CUDA will have a huge impact
+- It is ideal to have a VM for operation check separately from the one for development
 
 # Gradio
 
-- Gradio Docsに書いてないことが多すぎる。
+- Too many things not written in Gradio Docs.
 
 ## Blocks
 
-- 基本的には大量のwithで掘り下げていく
-- Tabにはイベントが無いはず
-- Boxにはlabelが無く、最初のオブジェクトのlabelが使われる
-- すべてのオブジェクトは gradio 起動時に描画される
-  - 重いリスト表示とかはボタンを押してから読み込む仕組みにしたほうが無難
+- Basically dig in with a lot of with
+- Tab should have no events
+- Box does not have a label, the first object's label is used
+- all objects are drawn on gradio startup
+  - For heavy list display, it is safer to use a mechanism to load after pressing a button
 
 ## update()
 
-- 外からのオブジェクトのアップデートはどうもうまくいかない
-- イベントのoutputsに指定すれば動くが挙動が限定的
-- 凝ったUIを思いついたときはそれが本当に実装できるか最初に試す
+- Updating objects from the outside just doesn't work
+- If you specify it as the output of the event, it will work, but the behavior is limited
+- When you come up with an elaborate UI, try it first to see if it can be implemented
 
 ## change()
 
-- 多重定義をすると無限ループを起こす
-- たとえばドロップダウンAを選択するとドロップダウンBの内容が変わり、ドロップダウンBを選択するとテキストボックスに値が入る、というのは無理
-- そういう処理はボタンを挟む
+- Overloading causes an infinite loop
+- For example, selecting dropdown A changes the contents of dropdown B, and selecting dropdown B puts a value in the textbox.
+- That kind of processing pinches the button
 
-## Textbox
+##Textbox
 
-- linesは内容に応じた可変にはならない
-- interactive=Falseでもリサイズできる
-- 文字列は勝手にunescape()される。この仕様はWindowsでpathを扱うときにとても困る
-  - 有効な回避策は入力時点でスラッシュにしておくこと
+- lines are not mutable according to their contents
+- Can be resized even with interactive=False
+- Strings are unescape()ed arbitrarily. This specification is very troublesome when dealing with paths on Windows
+  - A valid workaround is to keep forward slashes on input
 
 ## Image
 
-- change()を使っていいのはそれで作業フローが終わる時だけ
-- アップロード完了後にクリアして別のファイルをアップロードするにはユーザーが×ボタンを押すしかない
-- サイズがでかくてうざい
-- ファイルとして存在しないPIL Imageを返すと正しく表示されない？
-  - ファイルに保存するのが無難
+- use change() only when it ends the work flow
+- After the upload is complete, the only way for the user to clear it and upload another file is to press the X button
+- Big and annoying
+- If you return a PIL Image that does not exist as a file, it will not be displayed correctly?
+  - Safe to save to a file
 
-## Audio
+##Audio
 
-- 1ファイルしか再生できないので非常に不便
+- Very inconvenient because only one file can be played
 
 ## Files
 
-- ユーザーにダウンロードを促す方法はこれしかない
-- 自動的にダウンロードを開始することもできない
-- 表示内容をいじることもできない
-- 処理するとtmpフォルダにファイルのコピーをとる
-  - 複数ファイルに対応できるが全ファイルのコピーをとるので要注意
+- This is the only way to encourage users to download
+- You can't even start the download automatically
+- You can't even change the display content
+- Make a copy of the file in the tmp folder when processed
+  - Can handle multiple files, but be careful as it copies all files
 
-## テーブル表示
+## table view
 
-- gradioにはオブジェクトつきの一覧表示をする機能が無い
-- tableタグとstyle.cssとjavascriptで頑張って実装することになる
+- gradio does not have a function to display a list with objects
+- I will do my best to implement it with table tags, style.css and javascript
 
-## イベント
+## event
 
-- .click() とか
-- インデントレベルは with gr.Blocks() と同じ階層
+- like .click()
+- Indentation level is the same as with gr.Blocks()
 
 ### _js
 
-- ドキュメントにない引数
-- javascriptの関数名を入れる
-- fnより先に呼ばれる
-- returnの内容がinputs[]に上書きされる
-  - returnの要素数が足りないぶんはinputs[]の値が使われる
+- Arguments not documented
+- put javascript function name
+- called before fn
+- The content of return is overwritten by inputs[]
+  - If the number of elements in return is insufficient, the value of inputs[] is used
 
-引数は使えないが無名関数が使える。
+No arguments are allowed, but anonymous functions are allowed.
 
 ```python
 _js="function(){return rows('"+tab1.lower()+"_"+tab2.lower()+"')}",
 ```
 
-### fn
+###fn
 
-クラス名とメソッド名に変数を使いたい場合は getattr と globals を組み合わせる。
+Combine getattr and globals if you want to use variables for class and method names.
 
 ```python
 fn=getattr(globals()[f"FilerGroup{tab1}"], f"download_{tab2.lower()}"),
@@ -278,6 +278,6 @@ fn=getattr(globals()[f"FilerGroup{tab1}"], f"download_{tab2.lower()}"),
 
 ### outputs
 
-- 空のvalueがNoneになる時は指定することができない
-  - Textboxに対して''を返して空文字列を表示させることはできる
-  - Imageに対してNoneを返して画像をクリアすることはできない
+- Cannot be specified when empty value becomes None
+  - You can return '' to Textbox to display an empty string
+  - You cannot clear the image by returning None for Image
